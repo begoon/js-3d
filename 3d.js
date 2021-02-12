@@ -331,6 +331,7 @@ class mesh {
 
         const light_dot_product = vector_dot_product(normal, light_direction);
 
+        const color = luminum_to_color(light_dot_product);
 
         const t_projected = triangle_multiply_by_matrix(t_translated, mat_proj);
 
@@ -391,35 +392,44 @@ class matrix4x4 {
 
 const width = 512.0;
 const height = 480.0;
+const f_aspect_ratio = height / width;
 const f_near = 0.1;
 const f_far = 1000.0;
 const f_fov = 90.0;
-const f_aspect_ratio = height / width;
 const f_fov_rad = 1.0 / Math.tan(f_fov * 0.5 / 180.0 * Math.PI);
-
-const mat_proj = [
-  [f_aspect_ratio * f_fov_rad, 0, 0, 0],
-  [0, f_fov_rad, 0, 0],
-  [0, 0, f_far / (f_far - f_near), 1.0],
-  [0, 0, (-f_far * f_near) / (f_far - f_near), 0.0],
-];
 
 const camera = new V(0, 0, 0);
 
 let f_elapsed_time = 0;
-let f_theta = 0;
-setInterval(loop, 50);
+setInterval(loop, 100);
+
+const arg = (name) => {
+  return parseFloat(document.getElementById(name).innerHTML);
+}
 
 function loop() {
-  f_theta = 1.0 * f_elapsed_time;
+  const f_far = 1000.0;
+  const f_fov = arg('f_fov'); // 90.0;
+  const f_fov_rad = 1.0 / Math.tan(f_fov * 0.5 / 180.0 * Math.PI);
+
+  const mat_proj = [
+    [f_aspect_ratio * f_fov_rad, 0, 0, 0],
+    [0, f_fov_rad, 0, 0],
+    [0, 0, f_far / (f_far - f_near), 1.0],
+    [0, 0, (-f_far * f_near) / (f_far - f_near), 0.0],
+  ];
+
+  const f_theta = 0.1 * f_elapsed_time;
+
+  const rot_z_speed = arg('rot_z_speed'); // 0.5;
   const mat_rot_z = [
-    [Math.cos(f_theta), Math.sin(f_theta), 0, 0],
-    [-Math.sin(f_theta), Math.cos(f_theta), 0, 0],
+    [Math.cos(f_theta), Math.sin(f_theta * rot_z_speed), 0, 0],
+    [-Math.sin(f_theta), Math.cos(f_theta * rot_z_speed), 0, 0],
     [0, 0, 1, 0],
     [0, 0, 0, 1],
   ];
 
-  const rot_x_speed = 0.5;
+  const rot_x_speed = arg('rot_x_speed'); // 0.5;
   const mat_rot_x = [
     [1, 0, 0, 0],
     [0, Math.cos(f_theta * rot_x_speed), Math.sin(f_theta * rot_x_speed), 0],
@@ -430,5 +440,5 @@ function loop() {
   clear();
   ship.draw_projected(mat_proj, mat_rot_z, mat_rot_x);
 
-  f_elapsed_time += 0.1;
+  f_elapsed_time += 1;
 }
