@@ -296,6 +296,12 @@ const triangle_scale_to_canvas = (t) => {
   )
 }
 
+const luminum_to_color = (luminum) => {
+  const color_code = Math.round(Math.abs(luminum) * 255);
+  const color_hex = color_code.toString(16).padStart(2, '0');
+  return `#${color_hex}${color_hex}${color_hex}`;
+}
+
 class mesh {
   constructor() {
     this.m = [];
@@ -325,9 +331,6 @@ class mesh {
 
         const light_dot_product = vector_dot_product(normal, light_direction);
 
-        const color_code = Math.round(Math.abs(light_dot_product) * 255);
-        const color_hex = color_code.toString(16).padStart(2, '0');
-        const color = `#${color_hex}${color_hex}${color_hex}`;
 
         const t_projected = triangle_multiply_by_matrix(t_translated, mat_proj);
 
