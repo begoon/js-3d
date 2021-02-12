@@ -214,88 +214,6 @@ function load_object(obj) {
   return mesh;
 }
 
-const vector_add = (v1, v2) => {
-  return new V(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
-}
-
-const vector_substract = (v1, v2) => {
-  return new V(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-}
-
-const vector_normalize = (v) => {
-  const l = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-  return new V(v.x / l, v.y / l, v.z / l);
-}
-
-const vector_dot_product = (v1, v2) => {
-  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
-
-function vector_multiply_by_matrix(i, m) {
-  const o = new V(
-    i.x * m[0][0] + i.y * m[1][0] + i.z * m[2][0] + m[3][0],
-    i.x * m[0][1] + i.y * m[1][1] + i.z * m[2][1] + m[3][1],
-    i.x * m[0][2] + i.y * m[1][2] + i.z * m[2][2] + m[3][2],
-  );
-  const w = i.x * m[0][3] + i.y * m[1][3] + i.z * m[2][3] + m[3][3];
-  if (w != 0) {
-    o.x /= w;
-    o.y /= w;
-    o.z /= w;
-  }
-  return o;
-}
-
-const vector_scale_to_canvas = (v) => {
-  return new V(
-    Math.round((v.x + 1.0) * 0.5 * width),
-    Math.round((v.y + 1.0) * 0.5 * height),
-    v.z,
-  );
-}
-
-const triangle_offset = (t, o) => {
-  return new Triangle(
-    vector_add(t.v1, o),
-    vector_add(t.v2, o),
-    vector_add(t.v3, o),
-  );
-}
-
-const triangle_normal = (t) => {
-  const line1 = new V(
-    t.v2.x - t.v1.x,
-    t.v2.y - t.v1.y,
-    t.v2.z - t.v1.z,
-  );
-  const line2 = new V(
-    t.v3.x - t.v1.x,
-    t.v3.y - t.v1.y,
-    t.v3.z - t.v1.z,
-  );
-  return new V(
-    line1.y * line2.z - line1.z * line2.y,
-    line1.z * line2.x - line1.x * line2.z,
-    line1.x * line2.y - line1.y * line2.x,
-  );
-}
-
-const triangle_multiply_by_matrix = (t, m) => {
-  return new Triangle(
-    vector_multiply_by_matrix(t.v1, m),
-    vector_multiply_by_matrix(t.v2, m),
-    vector_multiply_by_matrix(t.v3, m),
-  );
-}
-
-const triangle_scale_to_canvas = (t) => {
-  return new Triangle(
-    vector_scale_to_canvas(t.v1),
-    vector_scale_to_canvas(t.v2),
-    vector_scale_to_canvas(t.v3),
-  )
-}
-
 class mesh {
   constructor() {
     this.m = [];
@@ -305,36 +223,95 @@ class mesh {
       t.draw();
     }
   }
-  draw_projected(mat_proj, mat_rot_z, mat_rot_x) {
+  draw_projected(m, mat_rot_z, mat_rot_x) {
     const triangles = [];
     for (let triangle of this.m) {
-      const t_rotated_z = triangle_multiply_by_matrix(triangle, mat_rot_z);
-      const t_rotated_x = triangle_multiply_by_matrix(t_rotated_z, mat_rot_x);
-
-      const distance = new V(0.0, 0.0, 8.0);
-      const t_translated = triangle_offset(t_rotated_x, distance);
-
-      const normal = vector_normalize(triangle_normal(t_translated));
-      const camera_dot_product = vector_dot_product(
-        normal,
-        vector_substract(t_translated.v1, camera),
+      const t_rotated_z = new Triangle(
+        multiply_matrix_vector(triangle.v1, mat_rot_z),
+        multiply_matrix_vector(triangle.v2, mat_rot_z),
+        multiply_matrix_vector(triangle.v3, mat_rot_z),
       );
+      const t_rotated_x = new Triangle(
+        multiply_matrix_vector(t_rotated_z.v1, mat_rot_x),
+        multiply_matrix_vector(t_rotated_z.v2, mat_rot_x),
+        multiply_matrix_vector(t_rotated_z.v3, mat_rot_x),
+      );
+      const t_translated = new Triangle(
+        vector_add(t_rotated_x.v1, distance),
+        vector_add(t_rotated_x.v2, distance),
+        vector_add(t_rotated_x.v3, distance),
+      );
+      const distance = 8.0;
+      const t_translated = new Triangle(
+        new V(t_rotated_x.v1.x, t_rotated_x.v1.y, t_rotated_x.v1.z + distance),
+        new V(t_rotated_x.v2.x, t_rotated_x.v2.y, t_rotated_x.v2.z + distance),
+        new V(t_rotated_x.v3.x, t_rotated_x.v3.y, t_rotated_x.v3.z + distance),
+      );
+      const line1 = new V(
+        t_translated.v2.x - t_translated.v1.x,
+        t_translated.v2.y - t_translated.v1.y,
+        t_translated.v2.z - t_translated.v1.z,
+      );
+      const line2 = new V(
+        t_translated.v3.x - t_translated.v1.x,
+        t_translated.v3.y - t_translated.v1.y,
+        t_translated.v3.z - t_translated.v1.z,
+      );
+      const normal = new V(
+        line1.y * line2.z - line1.z * line2.y,
+        line1.z * line2.x - line1.x * line2.z,
+        line1.x * line2.y - line1.y * line2.x,
+      );
+      const l = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+      normal.x /= l;
+      normal.y /= l;
+      normal.z /= l;
 
-      if (camera_dot_product < 0) {
-        const light_direction = vector_normalize(new V(0.0, 0.0, -1.0));
-
-        const light_dot_product = vector_dot_product(normal, light_direction);
-
-        const color_code = Math.round(Math.abs(light_dot_product) * 255);
+      const dot_product =
+        normal.x * (t_translated.v1.x - camera.x) +
+        normal.y * (t_translated.v1.y - camera.y) +
+        normal.z * (t_translated.v1.z - camera.z);
+      if (dot_product < 0) {
+        const light_direction = V(0.0, 0.0, -1.0);
+        const l = Math.sqrt(light_direction.x * light_direction.x + light_direction.y * light_direction.y + light_direction.z * light_direction.z);
+        light_direction.x /= l;
+        light_direction.y /= l;
+        light_direction.z /= l;
+        const d =
+          normal.x * light_direction.x +
+          normal.y * light_direction.y +
+          normal.z * light_direction.z;
+        const color_code = Math.round(Math.abs(d) * 255);
         const color_hex = color_code.toString(16).padStart(2, '0');
         const color = `#${color_hex}${color_hex}${color_hex}`;
+        const t_projected = new Triangle(
+          vector_multiply_by_matrix(t_translated.v1, m),
+          vector_multiply_by_matrix(t_translated.v2, m),
+          vector_multiply_by_matrix(t_translated.v3, m),
+        );
+        t_projected.v1.x += 1.0;
+        t_projected.v1.y += 1.0;
+        t_projected.v2.x += 1.0;
+        t_projected.v2.y += 1.0;
+        t_projected.v3.x += 1.0;
+        t_projected.v3.y += 1.0;
 
-        const t_projected = triangle_multiply_by_matrix(t_translated, mat_proj);
+        t_projected.v1.x *= 0.5 * width;
+        t_projected.v1.y *= 0.5 * height;
+        t_projected.v2.x *= 0.5 * width;
+        t_projected.v2.y *= 0.5 * height;
+        t_projected.v3.x *= 0.5 * width;
+        t_projected.v3.y *= 0.5 * height;
 
-        const t_scaled = triangle_scale_to_canvas(t_projected);
-        t_scaled.color = color;
+        t_projected.v1.x = Math.round(t_projected.v1.x);
+        t_projected.v1.y = Math.round(t_projected.v1.y);
+        t_projected.v2.x = Math.round(t_projected.v2.x);
+        t_projected.v2.y = Math.round(t_projected.v2.y);
+        t_projected.v3.x = Math.round(t_projected.v3.x);
+        t_projected.v3.y = Math.round(t_projected.v3.y);
 
-        triangles.push(t_scaled);
+        t_projected.color = color;
+        triangles.push(t_projected);
       }
     }
 
@@ -402,6 +379,21 @@ const mat_proj = [
 ];
 
 const camera = new V(0, 0, 0);
+
+function vector_multiply_by_matrix(i, m) {
+  const o = new V(
+    i.x * m[0][0] + i.y * m[1][0] + i.z * m[2][0] + m[3][0],
+    i.x * m[0][1] + i.y * m[1][1] + i.z * m[2][1] + m[3][1],
+    i.x * m[0][2] + i.y * m[1][2] + i.z * m[2][2] + m[3][2],
+  );
+  const w = i.x * m[0][3] + i.y * m[1][3] + i.z * m[2][3] + m[3][3];
+  if (w != 0) {
+    o.x /= w;
+    o.y /= w;
+    o.z /= w;
+  }
+  return o;
+}
 
 let f_elapsed_time = 0;
 let f_theta = 0;
