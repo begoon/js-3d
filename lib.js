@@ -1,5 +1,5 @@
 class V {
-  constructor(x, y, z, w = 0) {
+  constructor(x, y, z, w = 1) {
     this.x = parseFloat(x);
     this.y = parseFloat(y);
     this.z = parseFloat(z);

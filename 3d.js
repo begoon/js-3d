@@ -36,21 +36,14 @@ const triangle_normal = (t) => {
 }
 
 const triangle_multiply_by_matrix = (t, m) => {
-  t.v1.w = t.v2.w = t.v3.w = 1;
   const o = new Triangle(
     vector_multiply_by_matrix(t.v1, m),
     vector_multiply_by_matrix(t.v2, m),
     vector_multiply_by_matrix(t.v3, m),
   );
-  if (o.v1.w != 0) {
-    o.v1 = vector_div(o.v1, o.v1.w);
-  }
-  if (o.v2.w != 0) {
-    o.v2 = vector_div(o.v2, o.v2.w);
-  }
-  if (o.v3.w != 0) {
-    o.v3 = vector_div(o.v3, o.v3.w);
-  }
+  o.v1 = vector_div(o.v1, o.v1.w);
+  o.v2 = vector_div(o.v2, o.v2.w);
+  o.v3 = vector_div(o.v3, o.v3.w);
   return o;
 }
 
@@ -146,9 +139,6 @@ const draw_mesh = () => {
 const draw_projected_mesh = (m, mat_proj, mat_rot) => {
   const triangles = [];
   for (let triangle of m.m) {
-    triangle.v1.w = 1;
-    triangle.v2.w = 1;
-    triangle.v3.w = 1;
     const t_rotated = triangle_multiply_by_matrix(triangle, mat_rot);
 
     const distance = new V(0.0, 0.0, 8.0);
