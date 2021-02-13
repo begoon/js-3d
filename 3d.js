@@ -219,20 +219,10 @@ function loop() {
   const f_theta = 0.1 * f_elapsed_time;
 
   const rot_z_speed = arg('rot_z_speed'); // 0.5;
-  const mat_rot_z = [
-    [Math.cos(f_theta), Math.sin(f_theta * rot_z_speed), 0, 0],
-    [-Math.sin(f_theta), Math.cos(f_theta * rot_z_speed), 0, 0],
-    [0, 0, 1, 0],
-    [0, 0, 0, 1],
-  ];
+  const mat_rot_z = matrix_make_rotation_z(f_theta * rot_z_speed);
 
   const rot_x_speed = arg('rot_x_speed'); // 0.5;
-  const mat_rot_x = [
-    [1, 0, 0, 0],
-    [0, Math.cos(f_theta * rot_x_speed), Math.sin(f_theta * rot_x_speed), 0],
-    [0, -Math.sin(f_theta * rot_x_speed), Math.cos(f_theta * rot_x_speed), 0],
-    [0, 0, 0, 1],
-  ];
+  const mat_rot_x = matrix_make_rotation_y(f_theta * rot_x_speed);
 
   clear();
   draw_projected_mesh(ship, mat_proj, mat_rot_z, mat_rot_x);
