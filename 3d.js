@@ -17,7 +17,7 @@ const draw_triangle = (t) => {
 
 const vector_scale_to_canvas = (v) => {
   return vector_multiply_by_vector(
-    vector_add(v, new V(1, 1, 1)), new V(0.5 * width, 0.5 * height, 1)
+    vector_add(v, new V(1, 1, 0)), new V(0.5 * width, 0.5 * height, 1)
   );
 }
 
