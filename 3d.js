@@ -59,35 +59,51 @@ const vector_substract = (v1, v2) => {
   return new V(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
+const vector_multiply_by_scalar = (v, k) => {
+  return new V(v.x * k, v.y * k, v.z * k);
+}
+
+const vector_div = (v, k) => {
+  return new V(v.x / k, v.y / k, v.z / k);
+}
+
+const vector_length = (v) => {
+  return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
 const vector_normalize = (v) => {
-  const l = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-  return new V(v.x / l, v.y / l, v.z / l);
+  return vector_div(v, vector_length(v));
 }
 
 const vector_dot_product = (v1, v2) => {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-function vector_multiply_by_matrix(i, m) {
-  const o = new V(
-    i.x * m[0][0] + i.y * m[1][0] + i.z * m[2][0] + m[3][0],
-    i.x * m[0][1] + i.y * m[1][1] + i.z * m[2][1] + m[3][1],
-    i.x * m[0][2] + i.y * m[1][2] + i.z * m[2][2] + m[3][2],
+const vector_cross_product = (v1, v2) => {
+  return new V(
+    v1.y * v2.z - v1.z * v2.y,
+    v1.z * v2.x - v1.x * v2.z,
+    v1.x * v2.y - v1.y * v2.x,
   );
-  const w = i.x * m[0][3] + i.y * m[1][3] + i.z * m[2][3] + m[3][3];
-  if (w != 0) {
-    o.x /= w;
-    o.y /= w;
-    o.z /= w;
-  }
+}
+
+const vector_multiply_by_vector = (v1, v2) => {
+  return new V(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z);
+}
+
+function vector_multiply_by_matrix(v, m) {
+  const o = new V(
+    v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0] + v.w * m[3][0],
+    v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1] + v.w * m[3][1],
+    v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2] + v.w * m[3][2],
+    v.x * m[0][3] + v.y * m[1][3] + v.z * m[2][3] + v.w * m[3][3],
+  );
   return o;
 }
 
 const vector_scale_to_canvas = (v) => {
-  return new V(
-    Math.round((v.x + 1.0) * 0.5 * width),
-    Math.round((v.y + 1.0) * 0.5 * height),
-    v.z,
+  return vector_multiply_by_vector(
+    vector_add(v, new V(1, 1, 1)), new V(0.5 * width, 0.5 * height, 1)
   );
 }
 
@@ -100,29 +116,28 @@ const triangle_offset = (t, o) => {
 }
 
 const triangle_normal = (t) => {
-  const line1 = new V(
-    t.v2.x - t.v1.x,
-    t.v2.y - t.v1.y,
-    t.v2.z - t.v1.z,
-  );
-  const line2 = new V(
-    t.v3.x - t.v1.x,
-    t.v3.y - t.v1.y,
-    t.v3.z - t.v1.z,
-  );
-  return new V(
-    line1.y * line2.z - line1.z * line2.y,
-    line1.z * line2.x - line1.x * line2.z,
-    line1.x * line2.y - line1.y * line2.x,
-  );
+  const line1 = vector_substract(t.v2, t.v1);
+  const line2 = vector_substract(t.v3, t.v1);
+  return vector_cross_product(line1, line2);
 }
 
 const triangle_multiply_by_matrix = (t, m) => {
-  return new Triangle(
+  t.v1.w = t.v2.w = t.v3.w = 1;
+  const o = new Triangle(
     vector_multiply_by_matrix(t.v1, m),
     vector_multiply_by_matrix(t.v2, m),
     vector_multiply_by_matrix(t.v3, m),
   );
+  if (o.v1.w != 0) {
+    o.v1 = vector_div(o.v1, o.v1.w);
+  }
+  if (o.v2.w != 0) {
+    o.v2 = vector_div(o.v2, o.v2.w);
+  }
+  if (o.v3.w != 0) {
+    o.v3 = vector_div(o.v3, o.v3.w);
+  }
+  return o;
 }
 
 const triangle_scale_to_canvas = (t) => {
@@ -151,6 +166,9 @@ class mesh {
   draw_projected(mat_proj, mat_rot_z, mat_rot_x) {
     const triangles = [];
     for (let triangle of this.m) {
+      triangle.v1.w = 1;
+      triangle.v2.w = 1;
+      triangle.v3.w = 1;
       const t_rotated_z = triangle_multiply_by_matrix(triangle, mat_rot_z);
       const t_rotated_x = triangle_multiply_by_matrix(t_rotated_z, mat_rot_x);
 
