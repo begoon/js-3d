@@ -143,23 +143,20 @@ const draw_mesh = () => {
   }
 }
 
-const draw_projected_mesh = (m, mat_proj, mat_rot_z, mat_rot_x) => {
+const draw_projected_mesh = (m, mat_proj, mat_rot) => {
   const triangles = [];
   for (let triangle of m.m) {
     triangle.v1.w = 1;
     triangle.v2.w = 1;
     triangle.v3.w = 1;
-    const t_rotated_z = triangle_multiply_by_matrix(triangle, mat_rot_z);
-    const t_rotated_x = triangle_multiply_by_matrix(t_rotated_z, mat_rot_x);
+    const t_rotated = triangle_multiply_by_matrix(triangle, mat_rot);
 
     const distance = new V(0.0, 0.0, 8.0);
-    const t_translated = triangle_offset(t_rotated_x, distance);
+    const t_translated = triangle_offset(t_rotated, distance);
 
     const normal = vector_normalize(triangle_normal(t_translated));
-    const camera_dot_product = vector_dot_product(
-      normal,
-      vector_substract(t_translated.v1, camera),
-    );
+    const camera_ray = vector_substract(t_translated.v1, camera);
+    const camera_dot_product = vector_dot_product(normal, camera_ray);
 
     if (camera_dot_product < 0) {
       const light_direction = vector_normalize(new V(0.0, 0.0, -1.0));
@@ -218,14 +215,22 @@ function loop() {
   const mat_proj = matrix_make_projection(f_fov_rad, f_aspect_ratio, f_far, f_near);
   const f_theta = 0.1 * f_elapsed_time;
 
+  const rot_x_speed = arg('rot_x_speed'); // 0.5;
+  const mat_rot_x = matrix_make_rotation_x(f_theta * rot_x_speed);
+
   const rot_z_speed = arg('rot_z_speed'); // 0.5;
   const mat_rot_z = matrix_make_rotation_z(f_theta * rot_z_speed);
 
-  const rot_x_speed = arg('rot_x_speed'); // 0.5;
-  const mat_rot_x = matrix_make_rotation_y(f_theta * rot_x_speed);
+  const rot_y_speed = arg('rot_y_speed'); // 0.5;
+  const mat_rot_y = matrix_make_rotation_y(f_theta * rot_y_speed);
+
+  let mat_rot = matrix_make_identity();
+  mat_rot = matrix_multiply_by_matrix(mat_rot, mat_rot_x);
+  mat_rot = matrix_multiply_by_matrix(mat_rot, mat_rot_y);
+  mat_rot = matrix_multiply_by_matrix(mat_rot, mat_rot_z);
 
   clear();
-  draw_projected_mesh(ship, mat_proj, mat_rot_z, mat_rot_x);
+  draw_projected_mesh(ship, mat_proj, mat_rot);
 
   f_elapsed_time += 1;
 }
