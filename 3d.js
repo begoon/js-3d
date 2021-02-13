@@ -190,6 +190,9 @@ class mesh {
 const ship = new mesh();
 ship.m = load_object(ship_obj);
 
+const teapot = new mesh();
+teapot.m = load_object(teapot_obj);
+
 const cube = new mesh();
 cube.m = [
   // SOUTH
