@@ -148,6 +148,75 @@ const triangle_scale_to_canvas = (t) => {
   )
 }
 
+const matrix_make_identity = () => {
+  return [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+  ];
+}
+
+const matrix_make_rotation_x = (a) => {
+  return [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, Math.cos(a), Math.sin(a), 0.0],
+    [0.0, -Math.sin(a), Math.cos(a), 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+  ];
+}
+
+const matrix_make_rotation_y = (a) => {
+  return [
+    [Math.cos(a), 0.0, Math.sin(a), 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [-Math.sin(a), 0.0, Math.cos(a), 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+  ];
+}
+
+const matrix_make_rotation_z = (a) => {
+  return [
+    [Math.cos(a), Math.sin(a), 0.0, 0.0],
+    [-Math.sin(a), Math.cos(a), 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [0.0, 0.0, 0.0, 1.0],
+  ];
+}
+
+const matrix_make_translation = (x, y, z) => {
+  return [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 1.0, 0.0],
+    [x, y, z, 1.0],
+  ];
+}
+
+const matrix_make_projection = (f_fov_rad, f_aspect_ratio, f_far, f_near) => {
+  return [
+    [f_aspect_ratio * f_fov_rad, 0, 0, 0],
+    [0, f_fov_rad, 0, 0],
+    [0, 0, f_far / (f_far - f_near), 1.0],
+    [0, 0, (-f_far * f_near) / (f_far - f_near), 0.0],
+  ];
+}
+
+const matrix_multiply_by_matrix = (m1, m2) => {
+  const m = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 4; r++) {
+      m[r][c] = m1[r][0] * m2[0][c] + m1[r][1] * m2[1][c] + m1[r][2] * m2[2][c] + m1[r][3] * m2[3][c];
+    }
+  }
+  return m;
+}
+
 const luminum_to_color = (luminum) => {
   const color_code = Math.round(Math.abs(luminum) * 100 + 100);
   const color_hex = color_code.toString(16).padStart(2, '0');
@@ -240,13 +309,7 @@ function loop() {
   const f_fov = arg('f_fov'); // 90.0;
   const f_fov_rad = 1.0 / Math.tan(f_fov * 0.5 / 180.0 * Math.PI);
 
-  const mat_proj = [
-    [f_aspect_ratio * f_fov_rad, 0, 0, 0],
-    [0, f_fov_rad, 0, 0],
-    [0, 0, f_far / (f_far - f_near), 1.0],
-    [0, 0, (-f_far * f_near) / (f_far - f_near), 0.0],
-  ];
-
+  const mat_proj = matrix_make_projection(f_fov_rad, f_aspect_ratio, f_far, f_near);
   const f_theta = 0.1 * f_elapsed_time;
 
   const rot_z_speed = arg('rot_z_speed'); // 0.5;
