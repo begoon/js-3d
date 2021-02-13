@@ -6,10 +6,14 @@ function clear() {
 }
 
 class V {
-  constructor(x, y, z) {
+  constructor(x, y, z, w = 0) {
     this.x = parseFloat(x);
     this.y = parseFloat(y);
     this.z = parseFloat(z);
+    this.w = parseFloat(w);
+  }
+  s() {
+    return `[x: ${this.x}, y: ${this.y}, z: ${this.z}, w: ${this.w}]`;
   }
   s2() {
     return `[x: ${this.x}, y: ${this.y}]`;
