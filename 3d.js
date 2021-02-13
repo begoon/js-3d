@@ -212,17 +212,6 @@ cube.m = [
   new Triangle(new V(1.0, 0.0, 1.0), new V(0.0, 0.0, 0.0), new V(1.0, 0.0, 0.0)),
 ];
 
-class matrix4x4 {
-  constructor() {
-    this.r = [
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0],
-    ];
-  }
-}
-
 const width = 512.0;
 const height = 480.0;
 const f_aspect_ratio = height / width;
