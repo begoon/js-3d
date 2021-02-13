@@ -130,7 +130,7 @@ const triangle_scale_to_canvas = (t) => {
 }
 
 const luminum_to_color = (luminum) => {
-  const color_code = Math.round(Math.abs(luminum) * 255);
+  const color_code = Math.round(Math.abs(luminum) * 100 + 100);
   const color_hex = color_code.toString(16).padStart(2, '0');
   return `#${color_hex}${color_hex}${color_hex}`;
 }
