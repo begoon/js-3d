@@ -21,32 +21,6 @@ const vector_scale_to_canvas = (v) => {
   );
 }
 
-const triangle_offset = (t, o) => {
-  return new Triangle(
-    vector_add(t.v1, o),
-    vector_add(t.v2, o),
-    vector_add(t.v3, o),
-  );
-}
-
-const triangle_normal = (t) => {
-  const line1 = vector_substract(t.v2, t.v1);
-  const line2 = vector_substract(t.v3, t.v1);
-  return vector_cross_product(line1, line2);
-}
-
-const triangle_multiply_by_matrix = (t, m) => {
-  const o = new Triangle(
-    vector_multiply_by_matrix(t.v1, m),
-    vector_multiply_by_matrix(t.v2, m),
-    vector_multiply_by_matrix(t.v3, m),
-  );
-  o.v1 = vector_div(o.v1, o.v1.w);
-  o.v2 = vector_div(o.v2, o.v2.w);
-  o.v3 = vector_div(o.v3, o.v3.w);
-  return o;
-}
-
 const triangle_scale_to_canvas = (t) => {
   return new Triangle(
     vector_scale_to_canvas(t.v1),
